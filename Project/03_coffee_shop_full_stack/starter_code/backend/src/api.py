@@ -115,8 +115,8 @@ def create_drink(jwt):
         or appropriate status code indicating reason for failure
 '''
 @app.route('/drinks/<id>', methods=['PATCH'])
-# @requires_auth('patch:drinks')
-def update_drink(id):
+@requires_auth('patch:drinks')
+def update_drink(jwt, id):
 
     drink = Drink.query.filter(Drink.id == id).one_or_none()
 
