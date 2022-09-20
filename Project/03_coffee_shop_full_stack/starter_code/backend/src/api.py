@@ -32,7 +32,11 @@ CORS(app)
 # @requires_auth('get:drinks')
 def get_drinks():
     selection = Drink.query.all()
+
     drinks = [drink.short() for drink in selection]
+
+    if len(drinks) == 0:
+        abort(404)
 
     return jsonify({
         "success": True,
@@ -54,6 +58,9 @@ def get_drinks_detail(jwt):
     selection = Drink.query.all()
     drinks = [drink.long() for drink in selection]
 
+    if len(drinks) == 0:
+        abort(404)
+
     return jsonify({
         "success": True, 
         "drinks": drinks
@@ -72,36 +79,22 @@ def get_drinks_detail(jwt):
 @requires_auth('post:drinks')
 def create_drink(jwt):
     body = request.get_json()
-    print(body)
     title = body.get("title", None)
     recipe = body.get("recipe", None)
 
-    if recipe is None:
-        abort(404)
+    try:
 
-    drink = Drink(title=title, recipe='{}'.format(json.dumps(recipe)))
+        drink = Drink(title=title, recipe='{}'.format(json.dumps(recipe)))
+        
+        Drink.insert(drink)
+
+        return jsonify({
+                "success": True, 
+                "drinks": drink.long()
+                }), 200 
     
-    Drink.insert(drink)
-
-    return jsonify({
-            "success": True, 
-            "drinks": drink.long()
-            }), 200 
-
-    # Get inserted drink
-    # try:
-    #     new_drink = Drink.query.get(title)
-
-    #     if new_drink is None:
-    #         abort(404)
-
-    #     return jsonify({
-    #         "success": True, 
-    #         "drinks": new_drink.long()
-    #         }), 200 
-    
-    # except:
-    #     abort(422)
+    except:
+        abort(422)
 
 '''
 @TODO implement endpoint
@@ -125,17 +118,22 @@ def update_drink(jwt, id):
 
     body = request.get_json()
     title = body.get("title", None)
+    recipe = body.get("recipe", None)
 
-    if title:
-        drink.title = title
+    try:
+        if title:
+            drink.title = title
+        if recipe:
+            drink.recipe = '{}'.format(json.dumps(recipe))
 
-    drink.update()
+        drink.update()
 
-    return jsonify({
-            "success": True, 
-            "drinks": [drink.long()]
-            }), 200 
-
+        return jsonify({
+                "success": True, 
+                "drinks": [drink.long()]
+                }), 200 
+    except:
+        abort(422)
 
 
 '''
@@ -149,21 +147,23 @@ def update_drink(jwt, id):
         or appropriate status code indicating reason for failure
 '''
 @app.route('/drinks/<id>', methods=['DELETE'])
-# @requires_auth('delete:drinks')
-def delete_drink(id):
+@requires_auth('delete:drinks')
+def delete_drink(jwt, id):
+    try:
+        drink = Drink.query.filter(Drink.id == id).one_or_none()
 
-    drink = Drink.query.filter(Drink.id == id).one_or_none()
+        if drink is None:
+            abort(404)
 
-    if drink is None:
-        abort(404)
+        drink.delete()
 
-    drink.delete()
-
-    return jsonify({
-            "success": True, 
-            "drinks": drink.id
-            }), 200 
-
+        return jsonify({
+                "success": True, 
+                "drinks": drink.id
+                }), 200 
+    except:
+        abort(422)
+        
 # Error Handling
 '''
 Example error handling for unprocessable entity
