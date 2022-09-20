@@ -69,8 +69,8 @@ def get_drinks_detail(jwt):
         or appropriate status code indicating reason for failure
 '''
 @app.route('/drinks', methods=['POST'])
-# @requires_auth('post:drinks')
-def create_drink():
+@requires_auth('post:drinks')
+def create_drink(jwt):
     body = request.get_json()
     print(body)
     title = body.get("title", None)
@@ -211,5 +211,6 @@ def not_authorised(error):
     return jsonify({
         "success": False, 
         "error": error.status_code, 
-        "message": error.error['code']
-        }), 401
+        "message": error.error['code'],
+        "description": error.error['description']
+        }), error.status_code
