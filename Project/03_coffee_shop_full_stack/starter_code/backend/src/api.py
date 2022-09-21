@@ -90,7 +90,7 @@ def create_drink(jwt):
 
         return jsonify({
                 "success": True, 
-                "drinks": drink.long()
+                "drinks": [drink.long()]
                 }), 200 
     
     except:
@@ -163,7 +163,7 @@ def delete_drink(jwt, id):
                 }), 200 
     except:
         abort(422)
-        
+
 # Error Handling
 '''
 Example error handling for unprocessable entity
